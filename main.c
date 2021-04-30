@@ -21,8 +21,8 @@ struct Triangle {
   struct Point3d point3;
 };
 
-void read_obj_file(char filename[32], struct Triangle out_triangles[]){
-
+void read_obj_file(char filename[32], struct Triangle *out_triangles[]){
+  //open input file;
 }
 
 void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values){
@@ -110,7 +110,13 @@ void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values)
 }
 
 int main(){
-  yaml_to_object_stings(CONFIG_FILE_PATH, NULL, NULL);
+  struct Triangle tris[64];
+  read_obj_file("/object/cube/cube.obj", tris);
 
+  int i = 0;
+  while(i < 64){
+    triangle_print(tris[i]);
+    i++;
+  }
   return 0;
 }
