@@ -229,15 +229,5 @@ void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values)
 }
 
 int main(){
-  struct Triangle tris[64000];
-  int num_tris;
-  num_tris = read_obj_file("./objects/cube/cube.obj", tris);
-
-  int i = 0;
-  while(i < num_tris){
-    triangle_print(tris[i]);
-    printf("\n");
-    i++;
-  }
   return 0;
 }
