@@ -3,6 +3,28 @@
 #define OUTFILEPATH "out.png"
 #define CONFIG_FILE_PATH "config.yaml"
 
+struct Vector3d{
+  float x;
+  float y;
+  float z;
+};
+
+struct Point3d {
+  float x;
+  float y;
+  float z;
+};
+
+struct Triangle {
+  struct Point3d point1;
+  struct Point3d point2;
+  struct Point3d point3;
+};
+
+void read_obj_file(char filename[32], struct Triangle out_triangles[]){
+
+}
+
 void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values){
   //flags
   char comment_flag = 0;
