@@ -88,7 +88,5 @@ void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values)
 }
 
 int main(){
-  yaml_to_object_stings(CONFIG_FILE_PATH, NULL, NULL);
-
   return 0;
 }
