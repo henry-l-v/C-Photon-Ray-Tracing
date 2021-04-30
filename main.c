@@ -9,11 +9,19 @@ struct Vector3d{
   float z;
 };
 
+void vector3d_print(struct Vector3d vector3d_to_print){
+  printf("<%f, %f, %f>", vector3d_to_print.x, vector3d_to_print.y, vector3d_to_print.z);
+}
+
 struct Point3d {
   float x;
   float y;
   float z;
 };
+
+void point3d_print(struct Point3d point3d_to_print){
+  printf("[%f, %f, %f]", point3d_to_print.x, point3d_to_print.y, point3d_to_print.z);
+}
 
 struct Triangle {
   struct Point3d point1;
@@ -21,8 +29,18 @@ struct Triangle {
   struct Point3d point3;
 };
 
-void read_obj_file(char filename[32], struct Triangle *out_triangles[]){
-  //open input file;
+void triangle_print(struct Triangle triangle_to_print){
+  printf("^");
+  point3d_print(triangle_to_print.point1);
+  printf(", ");
+  point3d_print(triangle_to_print.point2);
+  printf(", ");
+  point3d_print(triangle_to_print.point3);
+  printf("^");
+}
+
+void read_obj_file(char filename[32], struct Triangle out_triangles[]){
+  
 }
 
 void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values){
@@ -116,6 +134,7 @@ int main(){
   int i = 0;
   while(i < 64){
     triangle_print(tris[i]);
+    printf("\n");
     i++;
   }
   return 0;
