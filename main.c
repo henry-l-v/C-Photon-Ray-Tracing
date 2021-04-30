@@ -1,26 +1,22 @@
 #include <stdio.h>
 
 #define OUTFILEPATH "out.png"
-#define CONFIG_FILE_PATH "test.yaml"
-
-const char config_name_map[] = "";
-const char config_type_map[] = "";
-const int config_pointer_map;
+#define CONFIG_FILE_PATH "config.yaml"
 
 //yaml map functions
-void yaml_map(char name_map[], char type_map[], int pointer_map, char filename[32]){
+void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values){
   //read input file
   FILE *fp;
   fp = fopen(filename, "r");
 
-  char object_name[64] = "";
+  char comment_flag = 0;
+  char path_data_toggle_flag = 0;
+  int whitespace_count = 0;
   char working_char;
-  int comment = 0;
-  int indent = 0;
-  int line_position = 0;
-  int object_name_place = 0;
-  int object_name_indent = 0;
-  int i;
+  char yaml_path[16][32];
+  int yaml_path_place = 0;
+  char yaml_value[32];
+  int yaml_value_place = 0;
 
   while(1){
     working_char = fgetc(fp);
@@ -29,39 +25,51 @@ void yaml_map(char name_map[], char type_map[], int pointer_map, char filename[3
       break;
     }
 
-    if(working_char == '#' && line_position == 0){
-      comment = 1;
+    if(working_char == '#'){
+      comment_flag = 1;
     }else if(working_char == '\n'){
-      if(!comment){
-        //printf("%s\n", object_name);
-      }
-      comment = 0;
-      line_position = 0;
-    }else if(working_char == ':'){
-      if(indent<=object_name_indent){
-        i = object_name_place;
-        while(i > 0){
-          printf("%c", object_name[i]);
-          i--;
+      yaml_value[yaml_value_place] = 0;
+      yaml_path[whitespace_count/2][yaml_path_place] = 0;
+      
+      if(yaml_value_place != 0){
+        int i = 0;
+        while(i <= whitespace_count/2){
+          printf("%s", yaml_path[i]);
+          if(i <= whitespace_count/2 - 1){
+            printf(".");
+          }
+          i++;
         }
-        printf("\n");
-      }else{
-        object_name_indent = indent;
+        printf(": %s\n", yaml_value);
       }
-      indent = 0;
-      object_name[object_name_place++] = '.';
-    }else if(working_char == ' '){
-      indent++;
-    }else if(!comment){
-      object_name[object_name_place++] = working_char;
-      line_position++;
+
+      comment_flag = 0;
+      path_data_toggle_flag = 0;
+      yaml_value_place = 0;
+      yaml_path_place = 0;
+      whitespace_count = 0;
+    }else if(!comment_flag && working_char == ' '){
+      if(!path_data_toggle_flag){
+        whitespace_count++;
+      }
+    }else if(!comment_flag && working_char == ':'){
+      path_data_toggle_flag = 1;
+    }else if(!comment_flag){
+      if(path_data_toggle_flag){
+        yaml_value[yaml_value_place] = working_char;
+        yaml_value_place++;
+      }else{
+        yaml_path[whitespace_count/2][yaml_path_place] = working_char;
+        yaml_path_place++;
+      }
     }
   }
+
   fclose(fp);
 }
 
 int main(){
-  yaml_map((char*)config_name_map, (char*)config_type_map, config_pointer_map, CONFIG_FILE_PATH);
+  yaml_to_object_stings(CONFIG_FILE_PATH, NULL, NULL);
 
   return 0;
 }
