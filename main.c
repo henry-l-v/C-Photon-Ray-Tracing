@@ -1,7 +1,148 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #define OUTFILEPATH "out.png"
 #define CONFIG_FILE_PATH "config.yaml"
+
+struct Vector3d{
+  float x;
+  float y;
+  float z;
+};
+
+void vector3d_print(struct Vector3d vector3d_to_print){
+  printf("<%f, %f, %f>", vector3d_to_print.x, vector3d_to_print.y, vector3d_to_print.z);
+}
+
+struct Point3d {
+  float x;
+  float y;
+  float z;
+};
+
+void point3d_print(struct Point3d point3d_to_print){
+  printf("[%f, %f, %f]", point3d_to_print.x, point3d_to_print.y, point3d_to_print.z);
+}
+
+struct Triangle {
+  struct Point3d point1;
+  struct Point3d point2;
+  struct Point3d point3;
+};
+
+void triangle_print(struct Triangle triangle_to_print){
+  printf("^");
+  point3d_print(triangle_to_print.point1);
+  printf(", ");
+  point3d_print(triangle_to_print.point2);
+  printf(", ");
+  point3d_print(triangle_to_print.point3);
+  printf("^");
+}
+
+int read_obj_file(char filename[32], struct Triangle out_triangles[]){
+  int num_triangles = 0;
+  char *line_buffer;
+  size_t line_buffer_size;
+  size_t line_size;
+  struct Point3d points[65536];
+  struct Triangle triangles[65536];
+  int num_points = 0;
+
+  int i = 2;
+  int arg_place = 0;
+  char arg_value[64];
+  int arg_value_place = 0;
+
+  FILE *fp;
+  fp = fopen(filename, "r");
+
+  if(!fp){
+    return 0;
+  }
+
+  while(1){
+    line_size = getline(&line_buffer, &line_buffer_size, fp);
+
+    if(line_size == -1){
+      break;
+    }
+
+    if(line_buffer[0] == 'v'){
+      i = 2;
+      arg_place = 0;
+      arg_value_place = 0;
+      while(i < line_size){
+        if(line_buffer[i] == ' '){
+          arg_value[arg_value_place] = 0;
+          if(arg_place == 0){
+            points[num_points].x = atof(arg_value);
+          }else if(arg_place == 1){
+            points[num_points].y = atof(arg_value);
+          }else if(arg_place == 2){
+            points[num_points].z = atof(arg_value);
+          }
+          arg_place++;
+          arg_value_place = 0;
+        }else{
+          arg_value[arg_value_place] = line_buffer[i];
+          arg_value_place++;
+        }
+        i++;
+      }
+      arg_value[arg_value_place] = 0;
+      if(arg_place == 0){
+        points[num_points].x = atof(arg_value);
+      }else if(arg_place == 1){
+        points[num_points].y = atof(arg_value);
+      }else if(arg_place == 2){
+        points[num_points].z = atof(arg_value);
+      }
+      num_points++;
+    }else if(line_buffer[0] == 'f'){
+      i = 2;
+      arg_place = 0;
+      arg_value_place = 0;
+      while(i < line_size){
+        if(line_buffer[i] == ' '){
+          arg_value[arg_value_place] = 0;
+          if(arg_place == 0){
+            triangles[num_triangles].point1 = points[atoi(arg_value) - 1];
+          }else if(arg_place == 1){
+            triangles[num_triangles].point2 = points[atoi(arg_value) - 1];
+          }else if(arg_place == 2){
+            triangles[num_triangles].point3 = points[atoi(arg_value) - 1];
+          }
+          arg_place++;
+          arg_value_place = 0;
+        }else{
+          arg_value[arg_value_place] = line_buffer[i];
+          arg_value_place++;
+        }
+        i++;
+      }
+      arg_value[arg_value_place] = 0;
+      if(arg_place == 0){
+        triangles[num_triangles].point1 = points[atoi(arg_value) - 1];
+      }else if(arg_place == 1){
+        triangles[num_triangles].point2 = points[atoi(arg_value) - 1];
+      }else if(arg_place == 2){
+        triangles[num_triangles].point3 = points[atoi(arg_value) - 1];
+      }
+
+      num_triangles++;
+    }
+  }
+  
+  fclose(fp);
+  
+  i = 0;
+  while(i < num_triangles){
+    out_triangles[i] = triangles[i];
+    i++;
+  }
+  return num_triangles;
+}
 
 void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values){
   //flags
