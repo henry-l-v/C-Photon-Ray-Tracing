@@ -98,9 +98,6 @@ int read_obj_file(char filename[32], struct Triangle out_triangles[]){
       }else if(arg_place == 2){
         points[num_points].z = atoi(arg_value);
       }
-
-      point3d_print(points[num_points]);
-      printf("\n");
       num_points++;
     }else if(line_buffer[0] == 'f'){
       i = 2;
@@ -109,7 +106,6 @@ int read_obj_file(char filename[32], struct Triangle out_triangles[]){
       while(i < line_size){
         if(line_buffer[i] == ' '){
           arg_value[arg_value_place] = 0;
-          printf("%d ", (int) atoi(arg_value));
           if(arg_place == 0){
             triangles[num_triangles].point1 = points[(int) atoi(arg_value) - 1];
           }else if(arg_place == 1){
@@ -126,7 +122,6 @@ int read_obj_file(char filename[32], struct Triangle out_triangles[]){
         i++;
       }
       arg_value[arg_value_place] = 0;
-      printf("%d\n", (int) atoi(arg_value));
       if(arg_place == 0){
         triangles[num_triangles].point1 = points[(int) atoi(arg_value) - 1];
       }else if(arg_place == 1){
