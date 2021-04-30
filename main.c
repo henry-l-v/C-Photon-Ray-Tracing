@@ -76,11 +76,11 @@ int read_obj_file(char filename[32], struct Triangle out_triangles[]){
         if(line_buffer[i] == ' '){
           arg_value[arg_value_place] = 0;
           if(arg_place == 0){
-            points[num_points].x = atoi(arg_value);
+            points[num_points].x = atof(arg_value);
           }else if(arg_place == 1){
-            points[num_points].y = atoi(arg_value);
+            points[num_points].y = atof(arg_value);
           }else if(arg_place == 2){
-            points[num_points].z = atoi(arg_value);
+            points[num_points].z = atof(arg_value);
           }
           arg_place++;
           arg_value_place = 0;
@@ -92,11 +92,11 @@ int read_obj_file(char filename[32], struct Triangle out_triangles[]){
       }
       arg_value[arg_value_place] = 0;
       if(arg_place == 0){
-        points[num_points].x = atoi(arg_value);
+        points[num_points].x = atof(arg_value);
       }else if(arg_place == 1){
-        points[num_points].y = atoi(arg_value);
+        points[num_points].y = atof(arg_value);
       }else if(arg_place == 2){
-        points[num_points].z = atoi(arg_value);
+        points[num_points].z = atof(arg_value);
       }
       num_points++;
     }else if(line_buffer[0] == 'f'){
@@ -107,11 +107,11 @@ int read_obj_file(char filename[32], struct Triangle out_triangles[]){
         if(line_buffer[i] == ' '){
           arg_value[arg_value_place] = 0;
           if(arg_place == 0){
-            triangles[num_triangles].point1 = points[(int) atoi(arg_value) - 1];
+            triangles[num_triangles].point1 = points[atoi(arg_value) - 1];
           }else if(arg_place == 1){
-            triangles[num_triangles].point2 = points[(int) atoi(arg_value) - 1];
+            triangles[num_triangles].point2 = points[atoi(arg_value) - 1];
           }else if(arg_place == 2){
-            triangles[num_triangles].point3 = points[(int) atoi(arg_value) - 1];
+            triangles[num_triangles].point3 = points[atoi(arg_value) - 1];
           }
           arg_place++;
           arg_value_place = 0;
@@ -123,11 +123,11 @@ int read_obj_file(char filename[32], struct Triangle out_triangles[]){
       }
       arg_value[arg_value_place] = 0;
       if(arg_place == 0){
-        triangles[num_triangles].point1 = points[(int) atoi(arg_value) - 1];
+        triangles[num_triangles].point1 = points[atoi(arg_value) - 1];
       }else if(arg_place == 1){
-        triangles[num_triangles].point2 = points[(int) atoi(arg_value) - 1];
+        triangles[num_triangles].point2 = points[atoi(arg_value) - 1];
       }else if(arg_place == 2){
-        triangles[num_triangles].point3 = points[(int) atoi(arg_value) - 1];
+        triangles[num_triangles].point3 = points[atoi(arg_value) - 1];
       }
 
       num_triangles++;
@@ -229,11 +229,10 @@ void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values)
 }
 
 int main(){
-  struct Triangle tris[64];
+  struct Triangle tris[64000];
   int num_tris;
   num_tris = read_obj_file("./objects/cube/cube.obj", tris);
 
-  printf("\n\n\n");
   int i = 0;
   while(i < num_tris){
     triangle_print(tris[i]);
