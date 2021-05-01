@@ -1,0 +1,8 @@
+png header bytes are:
+89 50 4E 47 0D 0A 1A 0A
+
+files have chunks consisting of:
+ - 4 bytes of length
+ - 4 bytes of type
+ - length bytes of chunk data
+ - 4 bytes of cyclic redundancy code / check sum

@@ -4,6 +4,11 @@
 #define OUTFILEPATH "out.png"
 #define CONFIG_FILE_PATH "config.yaml"
 
+#define PNG_HEADER_LENGTH 8
+const unsigned char png_header[] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+#define PNG_END_LENGTH 12
+const unsigned char png_end[] = {0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0x00, 0x00, 0x00, 0x00};
+
 struct Vector3d{
   float x;
   float y;
@@ -228,6 +233,83 @@ void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values)
   fclose(fp);
 }
 
+void long_to_bytes(unsigned long n, unsigned char out[4], int offset){
+  out[0 + offset] = (n >> 24) & 0xFF;
+  out[1 + offset] = (n >> 16) & 0xFF;
+  out[2 + offset] = (n >> 8) & 0xFF;
+  out[3 + offset] = n & 0xFF;
+}
+
+void write_png(char filename[], unsigned char data[], unsigned int width, unsigned int height){
+  FILE *fp;
+
+  int i = 0;
+  unsigned char chunk_length[4];
+  unsigned char chunk_type[4];
+  unsigned char chunk_data[65536];
+  unsigned char chunk_crc[4];
+
+  fp = fopen(filename, "w");
+
+  while(i < PNG_HEADER_LENGTH){
+    fputc(png_header[i], fp);
+    i++;
+  }
+
+  long_to_bytes(13, chunk_length, 0);
+  long_to_bytes(1229472850, chunk_type, 0);
+  long_to_bytes(width, chunk_data, 0);
+  long_to_bytes(height, chunk_data, 4);
+  chunk_data[8] = 8;
+  chunk_data[9] = 2;
+  chunk_data[10] = 0;
+  chunk_data[11] = 0;
+  chunk_data[12] = 0;
+
+  i = 0;
+  while(i < 4){
+    fputc(chunk_length[i], fp);
+    i++;
+  }
+
+  i = 0;
+  while(i < 4){
+    fputc(chunk_type[i], fp);
+    i++;
+  }
+
+  i = 0;
+  while(i < 13){
+    fputc(chunk_data[i], fp);
+    i++;
+  }
+
+  i = 0;
+  while(i < 4){
+    fputc(chunk_crc[i], fp);
+    i++;
+  }
+
+  
+
+  i = 0;
+  while(i < PNG_END_LENGTH){
+    fputc(png_end[i], fp);
+    i++;
+  }
+
+  fclose(fp);
+}
+
 int main(){
+  unsigned char image[25];
+  int i = 0;
+
+  while(i < 25){
+    image[i] = 255;
+    i++;
+  }
+
+  write_png("out.png", image, 5, 5);
   return 0;
 }
