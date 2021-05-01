@@ -1,1 +1,2 @@
 http://www.umich.edu/~eecs381/handouts/CHeaderFileGuidelines.pdf?
+https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/ray-triangle-intersection-geometric-solution
