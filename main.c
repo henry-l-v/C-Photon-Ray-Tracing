@@ -1,14 +1,33 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define OUTFILEPATH "out.png"
 #define CONFIG_FILE_PATH "config.yaml"
 
-struct Vector3d{
+struct Vector3d {
   float x;
   float y;
   float z;
 };
+
+float Vector3d_dot_product(struct Vector3d a, struct Vector3d b){
+  return a.x*b.x + a.y*b.y + a.z*b.z;
+};
+
+struct Vector3d Vector3d_cross_product(struct Vector3d a, struct Vector3d b){
+  struct Vector3d out;
+
+  out.x = a.y*b.z - a.z*b.y;
+  out.y = a.z*b.x - a.x*b.z;
+  out.z = a.x*b.y - a.y*b.x;
+
+  return out;
+}
+
+float Vector3d_magnitude(struct Vector3d a){
+  return sqrt(pow(a.x, 2) + pow(a.y, 2) + pow(a.z, 2));
+}
 
 void vector3d_print(struct Vector3d vector3d_to_print){
   printf("<%f, %f, %f>", vector3d_to_print.x, vector3d_to_print.y, vector3d_to_print.z);
@@ -23,6 +42,11 @@ struct Point3d {
 void point3d_print(struct Point3d point3d_to_print){
   printf("[%f, %f, %f]", point3d_to_print.x, point3d_to_print.y, point3d_to_print.z);
 }
+
+struct Ray {
+  struct Point3d origin;
+  struct Vector3d direction;
+};
 
 struct Triangle {
   struct Point3d point1;
