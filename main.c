@@ -40,13 +40,21 @@ struct Point3d {
 };
 
 void point3d_print(struct Point3d point3d_to_print){
-  printf("[%f, %f, %f]", point3d_to_print.x, point3d_to_print.y, point3d_to_print.z);
+  printf("(%f, %f, %f)", point3d_to_print.x, point3d_to_print.y, point3d_to_print.z);
 }
 
 struct Ray {
   struct Point3d origin;
   struct Vector3d direction;
 };
+
+void ray_print(struct Ray ray_to_print){
+  printf("[");
+  point3d_print(ray_to_print.origin);
+  printf(", ");
+  vector3d_print(ray_to_print.direction);
+  printf("]");
+}
 
 struct Triangle {
   struct Point3d point1;
