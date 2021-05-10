@@ -44,3 +44,10 @@ objects:
       x: 0
       y: 0
       z: 10
+#light controls
+lights:
+  1:
+    position:
+      x: 0
+      y: 0
+      z: 0

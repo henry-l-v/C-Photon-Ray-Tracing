@@ -22,6 +22,27 @@ struct Vector3d vector3d_create(float x, float y, float z){
   return out;
 }
 
+struct Vector3d vector3d_add(struct Vector3d a, struct Vector3d b){
+  struct Vector3d out;
+
+  out.x = a.x + b.x;
+  out.y = a.y + b.y;
+  out.z = a.z + b.z;
+
+  return out;
+}
+
+struct Vector3d vector3d_add_float(struct Vector3d a, float b){
+  struct Vector3d out;
+
+  out.x = a.x + b;
+  out.y = a.y + b;
+  out.z = a.z + b;
+
+  return out;
+}
+
+
 struct Vector3d vector3d_subtract(struct Vector3d a, struct Vector3d b){
   struct Vector3d out;
 
@@ -131,7 +152,7 @@ int ray_triangle_intersection(struct Ray ray, struct Triangle triangle){
   }
 
   //calculate ray triangle intersection point
-  struct Point3d ray_triangle_inersection_point;
+  struct Point3d ray_triangle_inersection_point = pointvector3d_add_float(point3d_convert_to_vector3d(ray.origin), ray_plane_distance);
 
   return 0;
 }
