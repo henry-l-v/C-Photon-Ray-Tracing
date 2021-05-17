@@ -12,16 +12,6 @@ struct Vector3d {
   float z;
 };
 
-struct Vector3d vector3d_create(float x, float y, float z){
-  struct Vector3d out;
-
-  out.x = x;
-  out.y = y;
-  out.z = z;
-
-  return out;
-}
-
 struct Vector3d vector3d_add(struct Vector3d a, struct Vector3d b){
   struct Vector3d out;
 
@@ -92,7 +82,8 @@ struct Vector3d point3d_vector3d_diffrence(struct Point3d a, struct Point3d b){
 };
 
 struct Vector3d point3d_convert_to_vector3d(struct Point3d p){
-  return vector3d_create(p.x, p.y, p.z);
+  struct Vector3d out = {p.x, p.y, p.z};
+  return out;
 }
 
 void point3d_print(struct Point3d point3d_to_print){
