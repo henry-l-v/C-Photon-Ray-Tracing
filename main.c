@@ -229,5 +229,15 @@ void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values)
 }
 
 int main(){
+  char config_paths[256][528];
+  char config_values[256][32];
+
+  yaml_to_object_stings(CONFIG_FILE_PATH, (char*) config_paths, (char*) config_values);
+
+  int i = 0;
+  while(i < 256){
+    printf("%s = %s", config_paths[i], config_values[i]);
+  }
+
   return 0;
 }
