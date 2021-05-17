@@ -144,7 +144,7 @@ int read_obj_file(char filename[32], struct Triangle out_triangles[]){
   return num_triangles;
 }
 
-void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values){
+int yaml_to_object_stings(char filename[32], char out_paths[256][528], char out_values[256][32]){
   //flags
   char comment_flag = 0;
   char path_data_toggle_flag = 0;
@@ -158,6 +158,8 @@ void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values)
   int whitespace_count = 0;
   int yaml_path_place = 0;
   int yaml_value_place = 0;
+  int num_values = 0;
+  int out_paths_place = 0;
 
   //open input file
   FILE *fp;
@@ -187,13 +189,35 @@ void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values)
         int i = 0;
         //loop though all used paths
         while(i <= whitespace_count/2){
+          int j = 0;
+          while(1){
+            if(yaml_path[i][j] == 0){
+              break;
+            }
+            out_paths[num_values][out_paths_place] = yaml_path[i][j];
+            out_paths_place++;
+            j++;
+          }
           printf("%s", yaml_path[i]);
           if(i <= whitespace_count/2 - 1){
             printf(".");
+            out_paths[num_values][out_paths_place] = '.';
+            out_paths_place++;
           }
           i++;
         }
+
+        int j = 0;
+        while(1){
+          if(yaml_value[j] == 0){
+            break;
+          }
+          out_values[num_values][j] = yaml_value[j];
+          j++;
+        }
         printf(": %s\n", yaml_value);
+        num_values++;
+        out_paths_place = 0;
       }
       
       //reset flags
@@ -226,17 +250,21 @@ void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values)
 
   //close input file
   fclose(fp);
+
+  return num_values;
 }
 
 int main(){
   char config_paths[256][528];
   char config_values[256][32];
+  int config_num;
 
-  yaml_to_object_stings(CONFIG_FILE_PATH, (char*) config_paths, (char*) config_values);
+  config_num = yaml_to_object_stings(CONFIG_FILE_PATH, config_paths, config_values);
 
   int i = 0;
-  while(i < 256){
-    printf("%s = %s", config_paths[i], config_values[i]);
+  while(i < config_num){
+    printf("%s = %s\n", config_paths[i], config_values[i]);
+    i++;
   }
 
   return 0;
