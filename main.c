@@ -143,7 +143,7 @@ int ray_triangle_intersection(struct Ray ray, struct Triangle triangle){
   }
 
   //calculate ray triangle intersection point
-  struct Point3d ray_triangle_inersection_point = pointvector3d_add_float(point3d_convert_to_vector3d(ray.origin), ray_plane_distance);
+  struct Point3d ray_triangle_intersection_point = point3d;
 
   return 0;
 }
