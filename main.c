@@ -198,9 +198,7 @@ int yaml_to_object_stings(char filename[32], char out_paths[256][528], char out_
             out_paths_place++;
             j++;
           }
-          printf("%s", yaml_path[i]);
           if(i <= whitespace_count/2 - 1){
-            printf(".");
             out_paths[num_values][out_paths_place] = '.';
             out_paths_place++;
           }
@@ -215,7 +213,6 @@ int yaml_to_object_stings(char filename[32], char out_paths[256][528], char out_
           out_values[num_values][j] = yaml_value[j];
           j++;
         }
-        printf(": %s\n", yaml_value);
         num_values++;
         out_paths_place = 0;
       }
