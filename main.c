@@ -396,10 +396,12 @@ int main(){
           *value = atoi(config_values[i]);
         }
       }
+      printf("    [%d / %d]          \r", i * config_map_length + j, config_num * config_map_length);
       j++;
     }
     i++;
   }
+  printf("\n");
 
   printf("Done.\n");
   return 0;
