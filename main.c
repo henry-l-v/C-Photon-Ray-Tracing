@@ -1,43 +1,150 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define OUTFILEPATH "out.png"
 #define CONFIG_FILE_PATH "config.yaml"
+#define EPSILON 1.192093e-07f
 
-struct Vector3d{
+struct Vector3d {
   float x;
   float y;
   float z;
 };
+
+struct Vector3d vector3d_add(struct Vector3d a, struct Vector3d b){
+  struct Vector3d out;
+
+  out.x = a.x + b.x;
+  out.y = a.y + b.y;
+  out.z = a.z + b.z;
+
+  return out;
+}
+
+struct Vector3d vector3d_subtract(struct Vector3d a, struct Vector3d b){
+  struct Vector3d out;
+
+  out.x = a.x - b.x;
+  out.y = a.y - b.y;
+  out.z = a.z - b.z;
+
+  return out;
+}
+
+struct Vector3d vector3d_multiply_float(struct Vector3d a, float b){
+  struct Vector3d out;
+
+  out.x = a.x * b;
+  out.y = a.y * b;
+  out.z = a.z * b;
+
+  return out;
+}
+
+float Vector3d_dot_product(struct Vector3d a, struct Vector3d b){
+  return a.x*b.x + a.y*b.y + a.z*b.z;
+};
+
+struct Vector3d Vector3d_cross_product(struct Vector3d a, struct Vector3d b){
+  struct Vector3d out;
+
+  out.x = a.y*b.z - a.z*b.y;
+  out.y = a.z*b.x - a.x*b.z;
+  out.z = a.x*b.y - a.y*b.x;
+
+  return out;
+}
+
+float Vector3d_magnitude(struct Vector3d a){
+  return sqrt(pow(a.x, 2) + pow(a.y, 2) + pow(a.z, 2));
+}
 
 void vector3d_print(struct Vector3d vector3d_to_print){
   printf("<%f, %f, %f>", vector3d_to_print.x, vector3d_to_print.y, vector3d_to_print.z);
 }
 
-struct Point3d {
-  float x;
-  float y;
-  float z;
+struct Ray {
+  struct Vector3d origin;
+  struct Vector3d direction;
 };
 
-void point3d_print(struct Point3d point3d_to_print){
-  printf("[%f, %f, %f]", point3d_to_print.x, point3d_to_print.y, point3d_to_print.z);
+void ray_print(struct Ray ray_to_print){
+  printf("[");
+  vector3d_print(ray_to_print.origin);
+  printf(", ");
+  vector3d_print(ray_to_print.direction);
+  printf("]");
 }
 
 struct Triangle {
-  struct Point3d point1;
-  struct Point3d point2;
-  struct Point3d point3;
+  struct Vector3d point1;
+  struct Vector3d point2;
+  struct Vector3d point3;
 };
 
 void triangle_print(struct Triangle triangle_to_print){
   printf("^");
-  point3d_print(triangle_to_print.point1);
+  vector3d_print(triangle_to_print.point1);
   printf(", ");
-  point3d_print(triangle_to_print.point2);
+  vector3d_print(triangle_to_print.point2);
   printf(", ");
-  point3d_print(triangle_to_print.point3);
+  vector3d_print(triangle_to_print.point3);
   printf("^");
+}
+
+int ray_triangle_intersection(struct Ray ray, struct Triangle triangle, struct Vector3d *outPoint){
+  //Calculate plane normal
+  struct Vector3d v1v2 = vector3d_subtract(triangle.point2, triangle.point1);
+  struct Vector3d v1v3 = vector3d_subtract(triangle.point3, triangle.point1);
+  struct Vector3d triangleNormal = Vector3d_cross_product(v1v2, v1v3);
+
+  //check if ray and plane are parallel
+  float triangleNormalDotRayDirection = Vector3d_dot_product(triangleNormal, ray.direction);
+  if(fabs(triangleNormalDotRayDirection) < EPSILON){
+    return 0;
+  }
+
+  //Calculate Plane origin distance
+  float planeOriginDistance = Vector3d_dot_product(triangleNormal, triangle.point1);
+
+  //Calculate ray plane distance
+  float rayPlaneDistance = (Vector3d_dot_product(triangleNormal, ray.origin) + planeOriginDistance) / triangleNormalDotRayDirection;
+
+  //Check if triangle is behind ray
+  if(rayPlaneDistance < 0){
+    return 0;
+  }
+
+  //Calculate ray plane intersection point
+  struct Vector3d rayPlaneIntersection = vector3d_add(ray.origin, vector3d_multiply_float(ray.direction, rayPlaneDistance));
+
+  //Check if ray plane intersection is inside triangle
+  struct Vector3d planePerpendicular;
+  
+  struct Vector3d edge1 = vector3d_subtract(triangle.point2, triangle.point1);
+  struct Vector3d vp1 = vector3d_subtract(rayPlaneIntersection, triangle.point1);
+  planePerpendicular = Vector3d_cross_product(edge1, vp1);
+  if (Vector3d_dot_product(triangleNormal, planePerpendicular) < 0){
+    return 0;
+  }
+
+  struct Vector3d edge2 = vector3d_subtract(triangle.point3, triangle.point2);
+  struct Vector3d vp2 = vector3d_subtract(rayPlaneIntersection, triangle.point2);
+  planePerpendicular = Vector3d_cross_product(edge2, vp2);
+  if (Vector3d_dot_product(triangleNormal, planePerpendicular) < 0){
+    return 0;
+  }
+
+  struct Vector3d edge3 = vector3d_subtract(triangle.point1, triangle.point3);
+  struct Vector3d vp3 = vector3d_subtract(rayPlaneIntersection, triangle.point3);
+  planePerpendicular = Vector3d_cross_product(edge3, vp3);
+  if (Vector3d_dot_product(triangleNormal, planePerpendicular) < 0){
+    return 0;
+  }
+
+  *outPoint = rayPlaneIntersection;
+  return 1;
 }
 
 int read_obj_file(char filename[32], struct Triangle out_triangles[]){
@@ -45,7 +152,7 @@ int read_obj_file(char filename[32], struct Triangle out_triangles[]){
   char *line_buffer;
   size_t line_buffer_size;
   size_t line_size;
-  struct Point3d points[65536];
+  struct Vector3d points[65536];
   struct Triangle triangles[65536];
   int num_points = 0;
 
