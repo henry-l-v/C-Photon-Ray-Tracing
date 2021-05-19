@@ -363,6 +363,8 @@ int yaml_to_object_stings(char filename[32], char out_paths[256][128], char out_
 }
 
 int main(){
+  printf("Starting...\n");
+  printf("Reading config file...\n");
   //config reader
   //config reader variables
   char config_paths[256][128];
@@ -377,7 +379,8 @@ int main(){
 
   //read config file
   config_num = yaml_to_object_stings(CONFIG_FILE_PATH, config_paths, config_values);
-
+  
+  printf("  Setting parameters...\n");
   //loop through parameters 
   int i = 0;
   while(i < config_num){
@@ -386,7 +389,7 @@ int main(){
     while(j < config_map_length){
       //check if match
       if(!strcmp(config_paths[i], config_path_map[j])){
-        printf("%s = %s\n", config_paths[i], config_values[i]);
+        printf("    %s = %s\n", config_paths[i], config_values[i]);
         //int
         if(config_type_map[j] == 'i'){
           int *value = config_pointer_map[j];
@@ -398,5 +401,6 @@ int main(){
     i++;
   }
 
+  printf("Done.\n");
   return 0;
 }
