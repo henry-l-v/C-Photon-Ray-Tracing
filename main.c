@@ -1,10 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #define OUTFILEPATH "out.png"
 #define CONFIG_FILE_PATH "config.yaml"
 #define EPSILON 1.192093e-07f
+
+int output_width;
+int output_height;
 
 struct Vector3d {
   float x;
@@ -251,7 +255,7 @@ int read_obj_file(char filename[32], struct Triangle out_triangles[]){
   return num_triangles;
 }
 
-void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values){
+int yaml_to_object_stings(char filename[32], char out_paths[256][128], char out_values[256][32]){
   //flags
   char comment_flag = 0;
   char path_data_toggle_flag = 0;
@@ -265,6 +269,8 @@ void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values)
   int whitespace_count = 0;
   int yaml_path_place = 0;
   int yaml_value_place = 0;
+  int num_values = 0;
+  int out_paths_place = 0;
 
   //open input file
   FILE *fp;
@@ -294,13 +300,32 @@ void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values)
         int i = 0;
         //loop though all used paths
         while(i <= whitespace_count/2){
-          printf("%s", yaml_path[i]);
+          int j = 0;
+          while(1){
+            if(yaml_path[i][j] == 0){
+              break;
+            }
+            out_paths[num_values][out_paths_place] = yaml_path[i][j];
+            out_paths_place++;
+            j++;
+          }
           if(i <= whitespace_count/2 - 1){
-            printf(".");
+            out_paths[num_values][out_paths_place] = '.';
+            out_paths_place++;
           }
           i++;
         }
-        printf(": %s\n", yaml_value);
+
+        int j = 0;
+        while(1){
+          if(yaml_value[j] == 0){
+            break;
+          }
+          out_values[num_values][j] = yaml_value[j];
+          j++;
+        }
+        num_values++;
+        out_paths_place = 0;
       }
       
       //reset flags
@@ -333,8 +358,45 @@ void yaml_to_object_stings(char filename[32], char *out_paths, char *out_values)
 
   //close input file
   fclose(fp);
+
+  return num_values;
 }
 
 int main(){
+  //config reader
+  //config reader variables
+  char config_paths[256][128];
+  char config_values[256][32];
+  int config_num;
+
+  int config_map_length = 2;
+  char config_path_map[][128] = {"camera.output.size.width", "camera.output.size.height"};
+  void *config_pointer_map[] = {&output_width, &output_height};
+  //type map: i = int, f = float
+  char config_type_map[] = {'i', 'i'};
+
+  //read config file
+  config_num = yaml_to_object_stings(CONFIG_FILE_PATH, config_paths, config_values);
+
+  //loop through parameters 
+  int i = 0;
+  while(i < config_num){
+    //loop throght maps
+    int j = 0;
+    while(j < config_map_length){
+      //check if match
+      if(!strcmp(config_paths[i], config_path_map[j])){
+        printf("%s = %s\n", config_paths[i], config_values[i]);
+        //int
+        if(config_type_map[j] == 'i'){
+          int *value = config_pointer_map[j];
+          *value = atoi(config_values[i]);
+        }
+      }
+      j++;
+    }
+    i++;
+  }
+
   return 0;
 }

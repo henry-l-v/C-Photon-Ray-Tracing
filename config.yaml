@@ -1,53 +1,40 @@
-# Camera settings
-# - world is for rendering settings
-#   - position controls the camera intersection plane position based on point1 and point2
-#   - filter controls the nessasary direction for the photons to be registers (controls the directon of the intersecting photons)
-# - ouput is for output settings
-#   - size controls the size of the ouput png
-#   - file is the file location of the ouput file
+
 camera:
-  world:
-    position:
-      point1:
-        x: -1
-        y: -1
-        z: 0
-      point2:
-        x: -1
-        y: 1
-        z: 0
-      point3:
-        x: 1
-        y: 1
-        z: 0
-      point4:
-        x: 1
-        y: -1
-        z: 0
-    filter:
-      x: 0
-      y: 0
-      z: -1
+  position:
+    x: 0
+    y: 0
+    z: -10
+  size:
+    width: 1
+    height: 1
+  direction:
+    x: 0
+    y: 0
+    z: 1
   output:
     size:
       width: 50
       height: 50
     file: out.png
-# object settings
-# list of objects 1, 2, 3, ...
-# - name is the name of the object
-# - offset is the offset to be applied to the object
-objects:
-  1:
-    name: cube
-    offset:
-      x: 0
-      y: 0
-      z: 10
-#light controls
+  misc:
+    max_ray_depth: 10
+    exposure: 100000
 lights:
-  1:
-    position:
-      x: 0
-      y: 0
-      z: 0
+  count: 1
+  lights:
+    1:
+      position:
+        x: 0
+        y: 3
+        z: -3
+      brightness: 1
+objects:
+  count: 1
+  objects:
+    1:
+      name: cube
+      position:
+        x: 0
+        y: 0
+        z: 0
+# END
