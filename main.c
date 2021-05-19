@@ -93,7 +93,7 @@ void triangle_print(struct Triangle triangle_to_print){
   printf("^");
 }
 
-int ray_triangle_intersection(struct Ray ray, struct Triangle triangle, struct Vector3d outPoint){
+int ray_triangle_intersection(struct Ray ray, struct Triangle triangle, struct Vector3d *outPoint){
   //Calculate plane normal
   struct Vector3d v1v2 = vector3d_subtract(triangle.point2, triangle.point1);
   struct Vector3d v1v3 = vector3d_subtract(triangle.point3, triangle.point1);
@@ -143,7 +143,7 @@ int ray_triangle_intersection(struct Ray ray, struct Triangle triangle, struct V
     return 0;
   }
 
-  outPoint = rayPlaneIntersection;
+  *outPoint = rayPlaneIntersection;
   return 1;
 }
 
