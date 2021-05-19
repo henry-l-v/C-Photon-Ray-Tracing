@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define OUTFILEPATH "out.png"
 #define CONFIG_FILE_PATH "config.yaml"
+
+int output_width;
+int output_height;
 
 struct Vector3d{
   float x;
@@ -144,7 +148,7 @@ int read_obj_file(char filename[32], struct Triangle out_triangles[]){
   return num_triangles;
 }
 
-int yaml_to_object_stings(char filename[32], char out_paths[256][528], char out_values[256][32]){
+int yaml_to_object_stings(char filename[32], char out_paths[256][128], char out_values[256][32]){
   //flags
   char comment_flag = 0;
   char path_data_toggle_flag = 0;
@@ -252,15 +256,38 @@ int yaml_to_object_stings(char filename[32], char out_paths[256][528], char out_
 }
 
 int main(){
-  char config_paths[256][528];
+  //config reader
+  //config reader variables
+  char config_paths[256][128];
   char config_values[256][32];
   int config_num;
 
+  int config_map_length = 2;
+  char config_path_map[][128] = {"camera.output.size.width", "camera.output.size.height"};
+  void *config_pointer_map[] = {&output_width, &output_height};
+  //type map: i = int, f = float
+  char config_type_map[] = {'i', 'i'};
+
+  //read config file
   config_num = yaml_to_object_stings(CONFIG_FILE_PATH, config_paths, config_values);
 
+  //loop through parameters 
   int i = 0;
   while(i < config_num){
-    printf("%s = %s\n", config_paths[i], config_values[i]);
+    //loop throght maps
+    int j = 0;
+    while(j < config_map_length){
+      //check if match
+      if(!strcmp(config_paths[i], config_path_map[j])){
+        printf("%s = %s\n", config_paths[i], config_values[i]);
+        //int
+        if(config_type_map[j] == 'i'){
+          int *value = config_pointer_map[j];
+          *value = atoi(config_values[i]);
+        }
+      }
+      j++;
+    }
     i++;
   }
 
