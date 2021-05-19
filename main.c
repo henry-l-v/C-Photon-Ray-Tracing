@@ -65,86 +65,36 @@ void vector3d_print(struct Vector3d vector3d_to_print){
   printf("<%f, %f, %f>", vector3d_to_print.x, vector3d_to_print.y, vector3d_to_print.z);
 }
 
-struct Point3d {
-  float x;
-  float y;
-  float z;
-};
-
-struct Vector3d point3d_vector3d_diffrence(struct Point3d a, struct Point3d b){
-  struct Vector3d out;
-
-  out.x = a.x - b.x;
-  out.y = a.y - b.y;
-  out.z = a.z - b.z;
-
-  return out;
-};
-
-struct Vector3d point3d_convert_to_vector3d(struct Point3d p){
-  struct Vector3d out = {p.x, p.y, p.z};
-  return out;
-}
-
-void point3d_print(struct Point3d point3d_to_print){
-  printf("(%f, %f, %f)", point3d_to_print.x, point3d_to_print.y, point3d_to_print.z);
-}
-
 struct Ray {
-  struct Point3d origin;
+  struct Vector3d origin;
   struct Vector3d direction;
 };
 
 void ray_print(struct Ray ray_to_print){
   printf("[");
-  point3d_print(ray_to_print.origin);
+  vector3d_print(ray_to_print.origin);
   printf(", ");
   vector3d_print(ray_to_print.direction);
   printf("]");
 }
 
 struct Triangle {
-  struct Point3d point1;
-  struct Point3d point2;
-  struct Point3d point3;
+  struct Vector3d point1;
+  struct Vector3d point2;
+  struct Vector3d point3;
 };
 
 void triangle_print(struct Triangle triangle_to_print){
   printf("^");
-  point3d_print(triangle_to_print.point1);
+  vector3d_print(triangle_to_print.point1);
   printf(", ");
-  point3d_print(triangle_to_print.point2);
+  vector3d_print(triangle_to_print.point2);
   printf(", ");
-  point3d_print(triangle_to_print.point3);
+  vector3d_print(triangle_to_print.point3);
   printf("^");
 }
 
 int ray_triangle_intersection(struct Ray ray, struct Triangle triangle){
-  //find triangle normal
-  struct Vector3d v1v2 = point3d_vector3d_diffrence(triangle.point2, triangle.point1);
-  struct Vector3d v1v3 = point3d_vector3d_diffrence(triangle.point3, triangle.point1);
-  struct Vector3d triangle_normal = Vector3d_cross_product(v1v2, v1v3);
-
-  //check if ray and triangle are parallel
-  float normal_ray_dot_product = Vector3d_dot_product(triangle_normal, ray.direction);
-  if(fabs(normal_ray_dot_product) < EPSILON){
-    return 0;  
-  }
-
-  // calculate triangle plane distance value
-  float distance = Vector3d_dot_product(triangle_normal, point3d_convert_to_vector3d(triangle.point1));
-
-  // calculate distance form ray to plane
-  float ray_plane_distance = Vector3d_dot_product(triangle_normal, point3d_convert_to_vector3d(ray.origin)) + distance;
-  
-  //check if triangle is behind ray
-  if(ray_plane_distance < 0){
-    return 0;
-  }
-
-  //calculate ray triangle intersection point
-  struct Point3d ray_triangle_intersection_point = point3d;
-
   return 0;
 }
 
@@ -153,7 +103,7 @@ int read_obj_file(char filename[32], struct Triangle out_triangles[]){
   char *line_buffer;
   size_t line_buffer_size;
   size_t line_size;
-  struct Point3d points[65536];
+  struct Vector3d points[65536];
   struct Triangle triangles[65536];
   int num_points = 0;
 
