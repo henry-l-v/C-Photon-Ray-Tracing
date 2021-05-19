@@ -11,6 +11,7 @@ int output_width;
 int output_height;
 int num_objects;
 int camera_exposure;
+int num_lights;
 
 struct Vector3d {
   float x;
@@ -373,11 +374,11 @@ int main(){
   char config_values[256][32];
   int config_num;
 
-  int config_map_length = 4;
-  char config_path_map[][128] = {"camera.output.size.width", "camera.output.size.height", "objects.count", "camera.misc.exposure"};
-  void *config_pointer_map[] =  {&output_width, &output_height, &num_objects, &camera_exposure};
+  int config_map_length = 5;
+  char config_path_map[][128] = {"camera.output.size.width", "camera.output.size.height", "objects.count", "camera.misc.exposure", "lights.count"};
+  void *config_pointer_map[] =  {&output_width, &output_height, &num_objects, &camera_exposure, &num_lights};
   //type map: i = int, f = float
-  char config_type_map[] = {'i', 'i', 'i', 'i'};
+  char config_type_map[] = {'i', 'i', 'i', 'i', 'i'};
 
   //read config file
   config_num = yaml_to_object_stings(CONFIG_FILE_PATH, config_paths, config_values);
@@ -413,16 +414,23 @@ int main(){
     i++;
   }
 
+  //process lights
+  printf("Processing lights...\n");
+  i = 0;
+  while(i < num_lights){
+    i++;
+  }
+
   //run ray traceing loop
   printf("Starting ray tracing loop..\n");
   i = 0;
-  struct Ray ray = {0.5, 0.5, 0, 0, 0, 1};
+  struct Ray ray = {0.5, 0.5, 0, 0.01, -0.01010101010101, 1};
   struct Triangle tri = {0, 0, 10, 1, 0, 10, 0, 1, 10};
   struct Vector3d p;
   while(i < camera_exposure){
     ray_triangle_intersection(ray, tri, &p);
     
-    if(i % 1000 == 0){
+    if(i % 10000 == 0){
       printf("  %f %%              \r", (100 * (float) i) / (float) camera_exposure);
     }
     i++;
