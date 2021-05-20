@@ -7,12 +7,6 @@
 #define CONFIG_FILE_PATH "config.yaml"
 #define EPSILON 1.192093e-07f
 
-int output_width;
-int output_height;
-int num_objects;
-int camera_exposure;
-int num_lights;
-
 struct Vector3d {
   float x;
   float y;
@@ -367,6 +361,14 @@ int yaml_to_object_stings(char filename[32], char out_paths[256][128], char out_
 
 int main(){
   printf("Starting...\n");
+
+  int output_width;
+  int output_height;
+  int num_objects;
+  int camera_exposure;
+  int num_lights;
+  int max_ray_depth;
+
   printf("Reading config file...\n");
   //config reader
   //config reader variables
@@ -374,11 +376,11 @@ int main(){
   char config_values[256][32];
   int config_num;
 
-  int config_map_length = 5;
-  char config_path_map[][128] = {"camera.output.size.width", "camera.output.size.height", "objects.count", "camera.misc.exposure", "lights.count"};
-  void *config_pointer_map[] =  {&output_width, &output_height, &num_objects, &camera_exposure, &num_lights};
+  int config_map_length = 6;
+  char config_path_map[][128] = {"camera.output.size.width", "camera.output.size.height", "objects.count", "camera.misc.exposure", "lights.count", "camera.misc.max_ray_depth"};
+  void *config_pointer_map[] =  {&output_width, &output_height, &num_objects, &camera_exposure, &num_lights, &max_ray_depth};
   //type map: i = int, f = float
-  char config_type_map[] = {'i', 'i', 'i', 'i', 'i'};
+  char config_type_map[] = {'i', 'i', 'i', 'i', 'i', 'i'};
 
   //read config file
   config_num = yaml_to_object_stings(CONFIG_FILE_PATH, config_paths, config_values);
@@ -404,10 +406,12 @@ int main(){
     }
     i++;
   }
-  printf("\n");
 
   //read object files
   printf("Reading object files...\n");
+
+  int num_triangles = 1;
+
   i = 0;
   while(i < num_objects){
     printf("  Reading object \"%s\"\n", "");
@@ -416,21 +420,88 @@ int main(){
 
   //process lights
   printf("Processing lights...\n");
+  char light_path[128];
+  struct Vector3d light_points[num_lights];
+  float light_brightnesses[num_lights];
+
   i = 0;
   while(i < num_lights){
+    sprintf(light_path, "lights.lights.%d.position.x", i);
+    int j = 0;
+    while(j < config_num){
+      if(!strcmp(light_path, config_paths[j])){
+        light_points[i].x = atof(config_values[j]);
+      }
+      j++;
+    }
+
+    sprintf(light_path, "lights.lights.%d.position.y", i);
+    j = 0;
+    while(j < config_num){
+      if(!strcmp(light_path, config_paths[j])){
+        light_points[i].y = atof(config_values[j]);
+      }
+      j++;
+    }
+
+    sprintf(light_path, "lights.lights.%d.position.z", i);
+    j = 0;
+    while(j < config_num){
+      if(!strcmp(light_path, config_paths[j])){
+        light_points[i].z = atof(config_values[j]);
+      }
+      j++;
+    }
+
+    sprintf(light_path, "lights.lights.%d.brightness", i);
+    j = 0;
+    while(j < config_num){
+      if(!strcmp(light_path, config_paths[j])){
+        light_brightnesses[i] = atof(config_values[j]);
+      }
+      j++;
+    }
+
+    printf("  %f %%              \r", (100 * (float) i) / (float) num_lights);
     i++;
   }
+
 
   //run ray traceing loop
   printf("Starting ray tracing loop..\n");
   i = 0;
-  struct Ray ray = {0.5, 0.5, 0, 0.01, -0.01010101010101, 1};
+  struct Ray ray = {0, 0, 0, 0, 0, 0};
   struct Triangle tri = {0, 0, 10, 1, 0, 10, 0, 1, 10};
   struct Vector3d p;
   while(i < camera_exposure){
-    ray_triangle_intersection(ray, tri, &p);
+    //generate random ray
+    double direction_x = ((double)rand())/RAND_MAX * M_PI - 1.0f / 2.0f * M_PI;
+    double direction_y = ((double)rand())/RAND_MAX * 2 * M_PI;
+
+    ray.direction.x = cos(direction_y);
+    ray.direction.y = sin(direction_x);
+    ray.direction.z = sin(direction_y);
+
+    ray.origin = light_points[(i * num_lights) / camera_exposure];
+
+    //loop though bounces
+    int j = 0;
+    int k = 0;
+    while(j < max_ray_depth){
+      k = 0;
+      while(k < num_triangles){
+        if(ray_triangle_intersection(ray, tri, &p)){
+          break;
+        }
+        k++;
+      }
+      if(!(k < num_triangles)){
+        break;
+      }
+      j++;
+    }
     
-    if(i % 10000 == 0){
+    if(i % 1000 == 0){
       printf("  %f %%              \r", (100 * (float) i) / (float) camera_exposure);
     }
     i++;

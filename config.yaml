@@ -17,20 +17,26 @@ camera:
     file: out.png
   misc:
     max_ray_depth: 10
-    exposure: 100000000
+    exposure: 1000000
 lights:
-  count: 1
+  count: 2
   lights:
-    1:
+    0:
       position:
         x: 0
         y: 3
         z: -3
-      brightness: 1
+      brightness: 0.001
+    1:
+      position:
+        x: 0
+        y: -3
+        z: 3
+      brightness: 0.001
 objects:
   count: 1
   objects:
-    1:
+    0:
       name: cube
       position:
         x: 0
