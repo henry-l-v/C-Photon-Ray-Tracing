@@ -33,13 +33,10 @@ lights:
         y: -3
         z: 3
       brightness: 0.001
-objects:
-  count: 1
-  objects:
-    0:
-      name: cube
-      position:
-        x: 0
-        y: 0
-        z: 0
+object:
+  name: cube
+  position:
+    x: 0
+    y: 0
+    z: 0
 # END

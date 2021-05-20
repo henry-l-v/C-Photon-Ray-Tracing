@@ -118,7 +118,7 @@ int ray_triangle_intersection(struct Ray ray, struct Triangle triangle, struct V
   }
 
   //Calculate ray plane intersection point
-  struct Vector3d rayPlaneIntersection = vector3d_add(ray.origin, vector3d_multiply_float(ray.direction, rayPlaneDistance));
+  struct Vector3d rayPlaneIntersection = vector3d_subtract(vector3d_multiply_float(ray.direction, rayPlaneDistance), ray.origin);
 
   //Check if ray plane intersection is inside triangle
   struct Vector3d planePerpendicular;
@@ -143,6 +143,8 @@ int ray_triangle_intersection(struct Ray ray, struct Triangle triangle, struct V
   if (Vector3d_dot_product(triangleNormal, planePerpendicular) < 0){
     return 0;
   }
+
+
 
   *outPoint = rayPlaneIntersection;
   return 1;
@@ -368,6 +370,10 @@ int main(){
   int camera_exposure;
   int num_lights;
   int max_ray_depth;
+  char object_name[16];
+  struct Vector3d object_offset;
+  struct Triangle triangles[65536];
+  int num_triangles;
 
   printf("Reading config file...\n");
   //config reader
@@ -376,11 +382,11 @@ int main(){
   char config_values[256][32];
   int config_num;
 
-  int config_map_length = 6;
-  char config_path_map[][128] = {"camera.output.size.width", "camera.output.size.height", "objects.count", "camera.misc.exposure", "lights.count", "camera.misc.max_ray_depth"};
-  void *config_pointer_map[] =  {&output_width, &output_height, &num_objects, &camera_exposure, &num_lights, &max_ray_depth};
+  int config_map_length = 10;
+  char config_path_map[][128] = {"camera.output.size.width", "camera.output.size.height", "objects.count", "camera.misc.exposure", "lights.count", "camera.misc.max_ray_depth", "object.name", "object.position.x", "object.position.y", "object.position.z"};
+  void *config_pointer_map[] =  {&output_width, &output_height, &num_objects, &camera_exposure, &num_lights, &max_ray_depth, &object_name, &object_offset.x, &object_offset.y, &object_offset.z};
   //type map: i = int, f = float
-  char config_type_map[] = {'i', 'i', 'i', 'i', 'i', 'i'};
+  char config_type_map[] = {'i', 'i', 'i', 'i', 'i', 'i', 's', 'f', 'f', 'f'};
 
   //read config file
   config_num = yaml_to_object_stings(CONFIG_FILE_PATH, config_paths, config_values);
@@ -400,6 +406,16 @@ int main(){
           int *value = config_pointer_map[j];
           *value = atoi(config_values[i]);
         }
+        //char[]
+        else if(config_type_map[j] == 's'){
+          char *value = config_pointer_map[j];
+          strcpy(value, config_values[i]);
+        }
+        //float
+        else if(config_type_map[j] == 'f'){
+          float *value = config_pointer_map[j];
+          *value = atof(config_values[i]);
+        }
       }
       printf("    [%d / %d]          \r", i * config_map_length + j, config_num * config_map_length);
       j++;
@@ -409,14 +425,10 @@ int main(){
 
   //read object files
   printf("Reading object files...\n");
-
-  int num_triangles = 1;
-
-  i = 0;
-  while(i < num_objects){
-    printf("  Reading object \"%s\"\n", "");
-    i++;
-  }
+  char object_file_path[128];
+  sprintf(object_file_path, "objects/%s/%s.obj", object_name, object_name);
+  printf("%s\n", object_name);
+  num_triangles = read_obj_file(object_file_path, triangles);
 
   //process lights
   printf("Processing lights...\n");
@@ -467,11 +479,10 @@ int main(){
   }
 
 
-  //run ray traceing loop
+  //run ray tracing loop
   printf("Starting ray tracing loop..\n");
   i = 0;
-  struct Ray ray = {0, 0, 0, 0, 0, 0};
-  struct Triangle tri = {0, 0, 10, 1, 0, 10, 0, 1, 10};
+  struct Ray ray;
   struct Vector3d p;
   while(i < camera_exposure){
     //generate random ray
@@ -490,7 +501,7 @@ int main(){
     while(j < max_ray_depth){
       k = 0;
       while(k < num_triangles){
-        if(ray_triangle_intersection(ray, tri, &p)){
+        if(ray_triangle_intersection(ray, triangles[k], &p)){
           break;
         }
         k++;
@@ -501,7 +512,7 @@ int main(){
       j++;
     }
     
-    if(i % 1000 == 0){
+    if(i % 5000 == 0){
       printf("  %f %%              \r", (100 * (float) i) / (float) camera_exposure);
     }
     i++;
