@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <time.h>
 
 #define OUTFILEPATH "out.png"
 #define CONFIG_FILE_PATH "config.yaml"
@@ -364,6 +365,8 @@ int yaml_to_object_stings(char filename[32], char out_paths[256][128], char out_
 int main(){
   printf("Starting...\n");
 
+  srand ( time(NULL) );
+
   int output_width;
   int output_height;
   int num_objects;
@@ -385,7 +388,7 @@ int main(){
   int config_map_length = 10;
   char config_path_map[][128] = {"camera.output.size.width", "camera.output.size.height", "objects.count", "camera.misc.exposure", "lights.count", "camera.misc.max_ray_depth", "object.name", "object.position.x", "object.position.y", "object.position.z"};
   void *config_pointer_map[] =  {&output_width, &output_height, &num_objects, &camera_exposure, &num_lights, &max_ray_depth, &object_name, &object_offset.x, &object_offset.y, &object_offset.z};
-  //type map: i = int, f = float
+  //type map: i = int, f = float, s = char[]
   char config_type_map[] = {'i', 'i', 'i', 'i', 'i', 'i', 's', 'f', 'f', 'f'};
 
   //read config file
@@ -423,12 +426,46 @@ int main(){
     i++;
   }
 
-  //read object files
-  printf("Reading object files...\n");
+  //process triangles
+  printf("Processing triangles...\n");
+
+  printf("  Reading object \"%s\"...\n", object_name);
   char object_file_path[128];
   sprintf(object_file_path, "objects/%s/%s.obj", object_name, object_name);
-  printf("%s\n", object_name);
   num_triangles = read_obj_file(object_file_path, triangles);
+
+  printf("  Adding camera triangles...\n");
+  struct Triangle cameraTriangle1 = {};
+  struct Triangle camreaTriangle2;
+  struct Triangle cameraBox1;
+  struct Triangle cameraBox2;
+  struct Triangle cameraBox3;
+  struct Triangle cameraBox4;
+  struct Triangle cameraBox5;
+  struct Triangle cameraBox6;
+  struct Triangle cameraBox7;
+  struct Triangle cameraBox8;
+
+  triangles[num_triangles] = cameraTriangle1;
+  num_triangles++;
+  triangles[num_triangles] = camreaTriangle2;
+  num_triangles++;
+  triangles[num_triangles] = cameraBox1;
+  num_triangles++;
+  triangles[num_triangles] = cameraBox2;
+  num_triangles++;
+  triangles[num_triangles] = cameraBox3;
+  num_triangles++;
+  triangles[num_triangles] = cameraBox4;
+  num_triangles++;
+  triangles[num_triangles] = cameraBox5;
+  num_triangles++;
+  triangles[num_triangles] = cameraBox6;
+  num_triangles++;
+  triangles[num_triangles] = cameraBox7;
+  num_triangles++;
+  triangles[num_triangles] = cameraBox8;
+  num_triangles++;
 
   //process lights
   printf("Processing lights...\n");

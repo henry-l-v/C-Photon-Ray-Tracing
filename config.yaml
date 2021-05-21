@@ -19,19 +19,13 @@ camera:
     max_ray_depth: 10
     exposure: 1000000
 lights:
-  count: 2
+  count: 1
   lights:
     0:
       position:
         x: 0
         y: 3
         z: -3
-      brightness: 0.001
-    1:
-      position:
-        x: 0
-        y: -3
-        z: 3
       brightness: 0.001
 object:
   name: cube
