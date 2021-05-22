@@ -1,1 +1,1 @@
-run = "clang main.c -o main -lm\n./main"
+run = "clang main.c -o main -lm -lpng\n./main"

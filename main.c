@@ -3,10 +3,125 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#include <png.h>
+#include <stdint.h>
 
 #define OUTFILEPATH "out.png"
 #define CONFIG_FILE_PATH "config.yaml"
 #define EPSILON 1.192093e-07f
+
+//this code is from https://www.lemoda.net/c/write-png/
+typedef struct
+{
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+}
+pixel_t;
+    
+typedef struct
+{
+    pixel_t *pixels;
+    size_t width;
+    size_t height;
+}
+bitmap_t;
+
+static pixel_t * pixel_at (bitmap_t * bitmap, int x, int y)
+{
+    return bitmap->pixels + bitmap->width * y + x;
+}
+
+static int save_png_to_file (bitmap_t *bitmap, const char *path)
+{
+    FILE * fp;
+    png_structp png_ptr = NULL;
+    png_infop info_ptr = NULL;
+    size_t x, y;
+    png_byte ** row_pointers = NULL;
+    /* "status" contains the return value of this function. At first
+       it is set to a value which means 'failure'. When the routine
+       has finished its work, it is set to a value which means
+       'success'. */
+    int status = -1;
+    /* The following number is set by trial and error only. I cannot
+       see where it it is documented in the libpng manual.
+    */
+    int pixel_size = 3;
+    int depth = 8;
+    
+    fp = fopen (path, "wb");
+    if (! fp) {
+        goto fopen_failed;
+    }
+
+    png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (png_ptr == NULL) {
+        goto png_create_write_struct_failed;
+    }
+    
+    info_ptr = png_create_info_struct (png_ptr);
+    if (info_ptr == NULL) {
+        goto png_create_info_struct_failed;
+    }
+    
+    /* Set up error handling. */
+
+    if (setjmp (png_jmpbuf (png_ptr))) {
+        goto png_failure;
+    }
+    
+    /* Set image attributes. */
+
+    png_set_IHDR (png_ptr,
+                  info_ptr,
+                  bitmap->width,
+                  bitmap->height,
+                  depth,
+                  PNG_COLOR_TYPE_RGB,
+                  PNG_INTERLACE_NONE,
+                  PNG_COMPRESSION_TYPE_DEFAULT,
+                  PNG_FILTER_TYPE_DEFAULT);
+    
+    /* Initialize rows of PNG. */
+
+    row_pointers = png_malloc (png_ptr, bitmap->height * sizeof (png_byte *));
+    for (y = 0; y < bitmap->height; y++) {
+        png_byte *row = 
+            png_malloc (png_ptr, sizeof (uint8_t) * bitmap->width * pixel_size);
+        row_pointers[y] = row;
+        for (x = 0; x < bitmap->width; x++) {
+            pixel_t * pixel = pixel_at (bitmap, x, y);
+            *row++ = pixel->red;
+            *row++ = pixel->green;
+            *row++ = pixel->blue;
+        }
+    }
+    
+    /* Write the image data to "fp". */
+
+    png_init_io (png_ptr, fp);
+    png_set_rows (png_ptr, info_ptr, row_pointers);
+    png_write_png (png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+
+    /* The routine has successfully written the file, so we set
+       "status" to a value which indicates success. */
+
+    status = 0;
+    
+    for (y = 0; y < bitmap->height; y++) {
+        png_free (png_ptr, row_pointers[y]);
+    }
+    png_free (png_ptr, row_pointers);
+    
+ png_failure:
+ png_create_info_struct_failed:
+    png_destroy_write_struct (&png_ptr, &info_ptr);
+ png_create_write_struct_failed:
+    fclose (fp);
+ fopen_failed:
+    return status;
+}
 
 struct Vector3d {
   float x;
@@ -30,6 +145,16 @@ struct Vector3d vector3d_subtract(struct Vector3d a, struct Vector3d b){
   out.x = a.x - b.x;
   out.y = a.y - b.y;
   out.z = a.z - b.z;
+
+  return out;
+}
+
+struct Vector3d vector3d_multiply(struct Vector3d a, struct Vector3d b){
+  struct Vector3d out;
+
+  out.x = a.x * b.x;
+  out.y = a.y * b.y;
+  out.z = a.z * b.z;
 
   return out;
 }
@@ -60,6 +185,17 @@ struct Vector3d Vector3d_cross_product(struct Vector3d a, struct Vector3d b){
 
 float Vector3d_magnitude(struct Vector3d a){
   return sqrt(pow(a.x, 2) + pow(a.y, 2) + pow(a.z, 2));
+}
+
+struct Vector3d vector3d_to_unit_vector(struct Vector3d v){
+  struct Vector3d out;
+  float vMag = Vector3d_magnitude(v);
+
+  out.x = v.x / vMag;
+  out.y = v.y / vMag;
+  out.z = v.z / vMag;
+
+  return out;
 }
 
 void vector3d_print(struct Vector3d vector3d_to_print){
@@ -95,7 +231,7 @@ void triangle_print(struct Triangle triangle_to_print){
   printf("^");
 }
 
-int ray_triangle_intersection(struct Ray ray, struct Triangle triangle, struct Vector3d *outPoint){
+int ray_triangle_intersection(struct Ray ray, struct Triangle triangle, struct Vector3d *outPoint, struct Vector3d *outNormal){
   //Calculate plane normal
   struct Vector3d v1v2 = vector3d_subtract(triangle.point2, triangle.point1);
   struct Vector3d v1v3 = vector3d_subtract(triangle.point3, triangle.point1);
@@ -121,6 +257,9 @@ int ray_triangle_intersection(struct Ray ray, struct Triangle triangle, struct V
   //Calculate ray plane intersection point
   struct Vector3d rayPlaneIntersection = vector3d_subtract(vector3d_multiply_float(ray.direction, rayPlaneDistance), ray.origin);
 
+  *outPoint = rayPlaneIntersection;
+  *outNormal = vector3d_to_unit_vector(triangleNormal);
+
   //Check if ray plane intersection is inside triangle
   struct Vector3d planePerpendicular;
   
@@ -128,27 +267,24 @@ int ray_triangle_intersection(struct Ray ray, struct Triangle triangle, struct V
   struct Vector3d vp1 = vector3d_subtract(rayPlaneIntersection, triangle.point1);
   planePerpendicular = Vector3d_cross_product(edge1, vp1);
   if (Vector3d_dot_product(triangleNormal, planePerpendicular) < 0){
-    return 0;
+    return 1;
   }
 
   struct Vector3d edge2 = vector3d_subtract(triangle.point3, triangle.point2);
   struct Vector3d vp2 = vector3d_subtract(rayPlaneIntersection, triangle.point2);
   planePerpendicular = Vector3d_cross_product(edge2, vp2);
   if (Vector3d_dot_product(triangleNormal, planePerpendicular) < 0){
-    return 0;
+    return 1;
   }
 
   struct Vector3d edge3 = vector3d_subtract(triangle.point1, triangle.point3);
   struct Vector3d vp3 = vector3d_subtract(rayPlaneIntersection, triangle.point3);
   planePerpendicular = Vector3d_cross_product(edge3, vp3);
   if (Vector3d_dot_product(triangleNormal, planePerpendicular) < 0){
-    return 0;
+    return 1;
   }
 
-
-
-  *outPoint = rayPlaneIntersection;
-  return 1;
+  return 2;
 }
 
 int read_obj_file(char filename[32], struct Triangle out_triangles[]){
@@ -362,6 +498,14 @@ int yaml_to_object_stings(char filename[32], char out_paths[256][128], char out_
   return num_values;
 }
 
+static int pix (int value, int max)
+{
+    if (value < 0) {
+        return 0;
+    }
+    return (int) (256.0 *((double) (value)/(double) max));
+}
+
 int main(){
   printf("Starting...\n");
 
@@ -377,6 +521,11 @@ int main(){
   struct Vector3d object_offset;
   struct Triangle triangles[65536];
   int num_triangles;
+  struct Vector3d camera_position;
+  float camera_width;
+  float camera_height;
+  char output_file[64];
+  struct Vector3d camera_point_position;
 
   printf("Reading config file...\n");
   //config reader
@@ -385,11 +534,11 @@ int main(){
   char config_values[256][32];
   int config_num;
 
-  int config_map_length = 10;
-  char config_path_map[][128] = {"camera.output.size.width", "camera.output.size.height", "objects.count", "camera.misc.exposure", "lights.count", "camera.misc.max_ray_depth", "object.name", "object.position.x", "object.position.y", "object.position.z"};
-  void *config_pointer_map[] =  {&output_width, &output_height, &num_objects, &camera_exposure, &num_lights, &max_ray_depth, &object_name, &object_offset.x, &object_offset.y, &object_offset.z};
+  int config_map_length = 19;
+  char config_path_map[][128] = {"camera.output.size.width", "camera.output.size.height", "objects.count", "camera.misc.exposure", "lights.count", "camera.misc.max_ray_depth", "object.name", "object.position.x", "object.position.y", "object.position.z", "camera.position.x", "camera.position.y", "camera.position.z", "camera.size.width", "camera.size.height", "camera.output.file", "camera.focus_point.x", "camera.focus_point.y", "camera.focus_point.z"};
+  void *config_pointer_map[] =  {&output_width, &output_height, &num_objects, &camera_exposure, &num_lights, &max_ray_depth, &object_name, &object_offset.x, &object_offset.y, &object_offset.z, &camera_position.x, &camera_position.y, &camera_position.z, &camera_width, &camera_height, &output_file, &camera_point_position.x, &camera_point_position.y, &camera_point_position.z};
   //type map: i = int, f = float, s = char[]
-  char config_type_map[] = {'i', 'i', 'i', 'i', 'i', 'i', 's', 'f', 'f', 'f'};
+  char config_type_map[] = {'i', 'i', 'i', 'i', 'i', 'i', 's', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 's', 'f', 'f', 'f'};
 
   //read config file
   config_num = yaml_to_object_stings(CONFIG_FILE_PATH, config_paths, config_values);
@@ -426,6 +575,10 @@ int main(){
     i++;
   }
 
+  //setup output buffer
+  printf("Creating output buffer...\n");
+  float output_buffer[output_width][output_height];
+
   //process triangles
   printf("Processing triangles...\n");
 
@@ -435,36 +588,21 @@ int main(){
   num_triangles = read_obj_file(object_file_path, triangles);
 
   printf("  Adding camera triangles...\n");
-  struct Triangle cameraTriangle1 = {};
-  struct Triangle camreaTriangle2;
-  struct Triangle cameraBox1;
-  struct Triangle cameraBox2;
-  struct Triangle cameraBox3;
-  struct Triangle cameraBox4;
-  struct Triangle cameraBox5;
-  struct Triangle cameraBox6;
-  struct Triangle cameraBox7;
-  struct Triangle cameraBox8;
+  struct Triangle cameraTriangle1 = {
+    camera_position.x - camera_width, camera_position.y - camera_height, camera_position.z,
+    camera_position.x + camera_width, camera_position.y - camera_height, camera_position.z,
+    camera_position.x - camera_width, camera_position.y + camera_height, camera_position.z,
+  };
+  struct Triangle camreaTriangle2 = {
+    camera_position.x + camera_width, camera_position.y + camera_height, camera_position.z,
+    camera_position.x - camera_width, camera_position.y + camera_height, camera_position.z,
+    camera_position.x + camera_width, camera_position.y - camera_height, camera_position.z,
+  };;
+  int cameraId = num_triangles;
 
   triangles[num_triangles] = cameraTriangle1;
   num_triangles++;
   triangles[num_triangles] = camreaTriangle2;
-  num_triangles++;
-  triangles[num_triangles] = cameraBox1;
-  num_triangles++;
-  triangles[num_triangles] = cameraBox2;
-  num_triangles++;
-  triangles[num_triangles] = cameraBox3;
-  num_triangles++;
-  triangles[num_triangles] = cameraBox4;
-  num_triangles++;
-  triangles[num_triangles] = cameraBox5;
-  num_triangles++;
-  triangles[num_triangles] = cameraBox6;
-  num_triangles++;
-  triangles[num_triangles] = cameraBox7;
-  num_triangles++;
-  triangles[num_triangles] = cameraBox8;
   num_triangles++;
 
   //process lights
@@ -521,6 +659,7 @@ int main(){
   i = 0;
   struct Ray ray;
   struct Vector3d p;
+  struct Vector3d normal;
   while(i < camera_exposure){
     //generate random ray
     double direction_x = ((double)rand())/RAND_MAX * M_PI - 1.0f / 2.0f * M_PI;
@@ -538,7 +677,18 @@ int main(){
     while(j < max_ray_depth){
       k = 0;
       while(k < num_triangles){
-        if(ray_triangle_intersection(ray, triangles[k], &p)){
+        if(ray_triangle_intersection(ray, triangles[k], &p, &normal) == 2){
+          if(k == cameraId || k == cameraId + 1){
+            ray.direction = vector3d_subtract(camera_point_position, ray.origin);
+            ray_triangle_intersection(ray, triangles[k], &p, &normal);
+
+            output_buffer[(int) p.x][(int) p.y] = 255;
+
+            j = max_ray_depth;
+            break;
+          }
+          ray.origin = p;
+          ray.direction = vector3d_subtract(ray.direction, vector3d_multiply_float(normal, Vector3d_dot_product(ray.direction, normal) * 2));
           break;
         }
         k++;
@@ -549,16 +699,44 @@ int main(){
       j++;
     }
     
-    if(i % 5000 == 0){
+    if(i % 1000 == 0){
       printf("  %f %%              \r", (100 * (float) i) / (float) camera_exposure);
     }
     i++;
   }
-  printf("\n");
 
-  vector3d_print(p);
+  printf("Outputing image...\n");
 
-  printf("\n");
+  bitmap_t output_image;
+  output_image.width = output_width;
+  output_image.height = output_height;
+  output_image.pixels = calloc (output_width * output_height, sizeof (pixel_t));
+
+  if (!output_image.pixels) {
+    printf("  Error creating output image...\n");
+    return 0;
+  }
+
+  printf("  Processing image...\n");
+
+  int x = 0;
+  int y = 0;
+  while(x < output_width){
+    y = 0;
+    while(y < output_height){
+      pixel_t * pixel = pixel_at (&output_image, x, y);
+
+      pixel->red = (uint8_t) output_buffer[x][y];
+      pixel->green = (uint8_t) output_buffer[x][y];
+      pixel->blue = (uint8_t) output_buffer[x][y];
+
+      y++;
+    }
+    x++;
+  }
+
+  printf("  Writing image to \"%s\"...\n", output_file);
+  save_png_to_file(&output_image, output_file);
 
   printf("Done.\n");
   return 0;

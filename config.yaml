@@ -3,6 +3,10 @@ camera:
     x: 0
     y: 0
     z: -10
+  focus_point:
+    x: 0
+    y: 0
+    z: -11
   size:
     width: 1
     height: 1
@@ -12,12 +16,12 @@ camera:
     z: 1
   output:
     size:
-      width: 50
-      height: 50
+      width: 800
+      height: 800
     file: out.png
   misc:
     max_ray_depth: 10
-    exposure: 1000000
+    exposure: 10000000
 lights:
   count: 1
   lights:
