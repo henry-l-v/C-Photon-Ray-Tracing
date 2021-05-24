@@ -6,7 +6,6 @@
 #include <png.h>
 #include <stdint.h>
 
-#define OUTFILEPATH "out.png"
 #define CONFIG_FILE_PATH "config.yaml"
 #define EPSILON 1.192093e-07f
 
@@ -122,6 +121,8 @@ static int save_png_to_file (bitmap_t *bitmap, const char *path)
  fopen_failed:
     return status;
 }
+
+//borrowed code ends
 
 struct Vector3d {
   float x;
@@ -509,7 +510,9 @@ static int pix (int value, int max)
 int main(){
   printf("Starting...\n");
 
-  srand ( time(NULL) );
+  int seed = time(NULL);
+  srand(seed);
+  printf("Using seed %d for random\n", seed);
 
   int output_width;
   int output_height;
@@ -569,7 +572,6 @@ int main(){
           *value = atof(config_values[i]);
         }
       }
-      printf("    [%d / %d]          \r", i * config_map_length + j, config_num * config_map_length);
       j++;
     }
     i++;
@@ -578,6 +580,17 @@ int main(){
   //setup output buffer
   printf("Creating output buffer...\n");
   float output_buffer[output_width][output_height];
+  int x;
+  int y;
+
+  while(x < output_width){
+    y = 0;
+    while(y < output_height){
+      output_buffer[x][y] = 0;
+      y++;
+    }
+    x++;
+  }
 
   //process triangles
   printf("Processing triangles...\n");
@@ -660,6 +673,8 @@ int main(){
   struct Ray ray;
   struct Vector3d p;
   struct Vector3d normal;
+  struct Vector3d camera_normal = {0, 0, 1};
+  int rays_traced = 0;
   while(i < camera_exposure){
     //generate random ray
     double direction_x = ((double)rand())/RAND_MAX * M_PI - 1.0f / 2.0f * M_PI;
@@ -677,18 +692,33 @@ int main(){
     while(j < max_ray_depth){
       k = 0;
       while(k < num_triangles){
+        rays_traced++;
         if(ray_triangle_intersection(ray, triangles[k], &p, &normal) == 2){
-          if(k == cameraId || k == cameraId + 1){
+          if((k == cameraId || k == cameraId + 1) && j > 0){
+
             ray.direction = vector3d_subtract(camera_point_position, ray.origin);
+            rays_traced++;
             ray_triangle_intersection(ray, triangles[k], &p, &normal);
 
-            output_buffer[(int) p.x][(int) p.y] = 255;
+            int outX = (int) ((p.x * 25) + output_width / 2);
+            int outY = (int) ((p.y * 25) + output_height / 2);
+            
+            if(outX >= 0 && outY >= 0 && outX < output_width && outY < output_height){
+              output_buffer[outX][outY] = 255;
+            }
 
             j = max_ray_depth;
             break;
           }
+          direction_x = ((double)rand())/RAND_MAX * M_PI - 1.0f / 2.0f * M_PI;
+          direction_y = ((double)rand())/RAND_MAX * 2 * M_PI;
+
+          ray.direction.x = cos(direction_y);
+          ray.direction.y = sin(direction_x);
+          ray.direction.z = sin(direction_y);
+          
           ray.origin = p;
-          ray.direction = vector3d_subtract(ray.direction, vector3d_multiply_float(normal, Vector3d_dot_product(ray.direction, normal) * 2));
+          //ray.direction = vector3d_subtract(ray.direction, vector3d_multiply_float(normal, Vector3d_dot_product(ray.direction, normal) * 2));
           break;
         }
         k++;
@@ -699,11 +729,12 @@ int main(){
       j++;
     }
     
-    if(i % 1000 == 0){
+    if(i % 100 == 0){
       printf("  %f %%              \r", (100 * (float) i) / (float) camera_exposure);
     }
     i++;
   }
+  printf("  Traced %d rays\n", rays_traced);
 
   printf("Outputing image...\n");
 
@@ -719,16 +750,22 @@ int main(){
 
   printf("  Processing image...\n");
 
-  int x = 0;
-  int y = 0;
+  x = 0;
   while(x < output_width){
     y = 0;
     while(y < output_height){
       pixel_t * pixel = pixel_at (&output_image, x, y);
 
-      pixel->red = (uint8_t) output_buffer[x][y];
-      pixel->green = (uint8_t) output_buffer[x][y];
-      pixel->blue = (uint8_t) output_buffer[x][y];
+      uint8_t c = output_buffer[x][y];
+      if(output_buffer[x][y] > 255){
+        c = 255;
+      }else if(output_buffer[x][y] < 0){
+        c = 0;
+      }
+
+      pixel->red = c;
+      pixel->green = c;
+      pixel->blue = c;
 
       y++;
     }
