@@ -1,10 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
-#include <string.h>
-#include <time.h>
 #include <png.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #define CONFIG_FILE_PATH "config.yaml"
 #define EPSILON 1.192093e-07f
